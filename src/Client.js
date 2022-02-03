@@ -1,20 +1,23 @@
+const reservedWords = ["server-request-client", "server-response-client"]
+
 export default class SocketClient {
 	#register = {};
 	#messageHandler = {};
 
 	constructor(socket, opts = {}) {
-		const {
-			remoteTimeout = 10000
-		} = opts
+		const {remoteTimeout = 10000} = opts
 		this.socket = socket
 		this.remoteTimeout = remoteTimeout
 
-		this.socket.on("server-response-client", ({ request, response, success }) => {
+		this.socket.on("server-response-client", ({request, response, success}) => {
 			if (this.#register[request.id]) {
 				clearTimeout(this.#register[request.id].timeoutId)
 				// log(Label.response, "Server ➜ me", response)
 				if (success) this.#register[request.id].resolve(response)
-				else this.#register[request.id].reject(new Error(`SERVER RESPONSE: ${response.message}`))
+				else
+					this.#register[request.id].reject(
+						new Error(`SERVER RESPONSE: ${response.message}`)
+					)
 				delete this.#register[request.id]
 			}
 		})
@@ -29,9 +32,10 @@ export default class SocketClient {
 			}
 			if (this.#messageHandler[request.message]) {
 				try {
-					sendBack(await this.#messageHandler[request.message](...request.args))
-				}
-				catch(err) {
+					sendBack(
+						await this.#messageHandler[request.message](...request.args)
+					)
+				} catch (err) {
 					console.error(err)
 					sendBack({message: err.message, stack: err.stack}, false)
 				}
@@ -40,6 +44,8 @@ export default class SocketClient {
 	}
 
 	onPromise(message, handler) {
+		if (reservedWords.includes(message))
+			throw new Error(`${reservedWords.join(", ")} are reserved words`)
 		this.#messageHandler[message] = handler
 	}
 
@@ -55,7 +61,7 @@ export default class SocketClient {
 				delete this.#register[request.id]
 				reject(new Error("Remote server timeout!"))
 			}, this.remoteTimeout)
-			this.#register[request.id] = { resolve, reject, timeoutId }
+			this.#register[request.id] = {resolve, reject, timeoutId}
 			this.socket.emit("client-request-server", request)
 			// log(Label.request, "Me ➜ server", request)
 		})
@@ -63,5 +69,7 @@ export default class SocketClient {
 }
 
 function uniqid() {
-	return Math.random().toString(16).slice(2)
+	return Math.random()
+		.toString(16)
+		.slice(2)
 }

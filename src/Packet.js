@@ -1,5 +1,5 @@
 export class Packet {
-	id = uniqid()
+	id = uniqid();
 	constructor(message, args) {
 		this.message = message
 		this.args = args
@@ -7,5 +7,7 @@ export class Packet {
 }
 
 function uniqid() {
-	return Math.random().toString(16).slice(2)
+	return Math.random()
+		.toString(16)
+		.slice(2)
 }

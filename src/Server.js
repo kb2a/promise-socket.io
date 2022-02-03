@@ -1,16 +1,11 @@
-const reservedWords = [
-	"client-request-server",
-	"client-response-server"
-]
+const reservedWords = ["client-request-server", "client-response-server"]
 
 export default class SocketServer {
 	#register = {};
-	#onConnectionHandler = () => {}
+	#onConnectionHandler = () => {};
 
 	constructor(io, opts = {}) {
-		const {
-			remoteTimeout = 10000
-		} = opts
+		const {remoteTimeout = 10000} = opts
 		this.io = io
 		this.remoteTimeout = remoteTimeout
 
@@ -35,7 +30,7 @@ export default class SocketServer {
 						delete this.#register[request.id]
 						reject(new Error("Remote client timeout!"))
 					}, this.remoteTimeout)
-					this.#register[request.id] = { resolve, reject, timeoutId }
+					this.#register[request.id] = {resolve, reject, timeoutId}
 					socket.emit("server-request-client", request)
 					// log(Label.request, "Me ➜ client", request)
 				})
@@ -52,9 +47,10 @@ export default class SocketServer {
 				}
 				if (socket.messageHandler[request.message]) {
 					try {
-						sendBack(await socket.messageHandler[request.message](...request.args))
-					}
-					catch(err) {
+						sendBack(
+							await socket.messageHandler[request.message](...request.args)
+						)
+					} catch (err) {
 						console.error(err)
 						sendBack({message: err.message, stack: err.stack}, false)
 					}
@@ -62,12 +58,15 @@ export default class SocketServer {
 				}
 			})
 
-			socket.on("client-response-server", ({ request, response, success }) => {
+			socket.on("client-response-server", ({request, response, success}) => {
 				if (this.#register[request.id]) {
 					clearTimeout(this.#register[request.id].timeoutId)
 					// log(Label.response, "Client ➜ me", response)
 					if (success) this.#register[request.id].resolve(response)
-					else this.#register[request.id].reject(new Error(`CLIENT RESPONSE: ${response.message}`))
+					else
+						this.#register[request.id].reject(
+							new Error(`CLIENT RESPONSE: ${response.message}`)
+						)
 					delete this.#register[request.id]
 				}
 			})
@@ -82,5 +81,7 @@ export default class SocketServer {
 }
 
 function uniqid() {
-	return Math.random().toString(16).slice(2)
+	return Math.random()
+		.toString(16)
+		.slice(2)
 }
